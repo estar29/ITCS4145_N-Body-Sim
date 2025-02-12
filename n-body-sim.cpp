@@ -73,9 +73,9 @@ particle* generate_data (particle arr[], int num_particles)
     srand(time(0));
     
     for(int i=0; i < num_particles; i++) {
-        arr[i].mass = rand() / 100;
-        arr[i].position = rand() / 100;
-        arr[i].velocity = rand() / 100;
+        arr[i].mass = (double) (rand() % 100) / 100;
+        arr[i].position = (double) (rand() % 100) / 100;
+        arr[i].velocity = (double) (rand() % 100) / 100;
 
         // Random chance to produce a negative number.
         int neg = rand();
