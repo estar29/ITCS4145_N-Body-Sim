@@ -11,6 +11,7 @@
 #include <iostream>
 #include <math.h>
 #include <random>
+#include <chrono>
 
 using namespace std;
 
@@ -80,13 +81,12 @@ particle* generate_data (particle arr[], int num_particles)
         // Random chance to produce a negative number.
         int neg = rand();
         if (neg % 2 == 1){
-            arr[i].position = arr[i].position - (2 * arr[i].position);
-            arr[i].velocity = arr[i].velocity - (2 * arr[i].position);
+            arr[i].position = -arr[i].position;
+            arr[i].velocity = -arr[i].velocity;
         }
 
-        std::cout << "\n" << arr[i].mass << " " << arr[i].position << " " << arr[i].velocity << " ";
     }
-    std::cout << "\n";
+
     return arr;
 }
 
@@ -106,10 +106,20 @@ int main (int argc, char* argv[])
         return -1;
     }
 
+    // Populate array.
     arr = generate_data(arr, num_particles);
 
-    int iteration_count = 0;
     // Run the program for x number of iterations.
+    int iteration_count = 0;
+    
+    // Libraries to use for timing the algorithm's efficiency.
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using std::chrono::milliseconds;
+
+    // Get the time before the simulation runs.
+    auto start = high_resolution_clock::now();
     while(iteration_count <= iterations) 
     {
         // Reset all the particle's forces.
@@ -144,8 +154,10 @@ int main (int argc, char* argv[])
         
         // For every [dump_rate] interval, print the output to the log file.
         if (iteration_count % dump_rate == 0) {
+            // Display the number of particles in the system.
+            std::cout << num_particles << "\t";
             for (int a=0; a < num_particles; a++) {
-                std::cout << arr[a].mass << " " << arr[a].position << " " << arr[a].velocity << " " << arr[a].force << " ";
+                std::cout << arr[a].mass << "\t" << arr[a].position << "\t" << arr[a].velocity << "\t" << arr[a].force << "\t";
             }
             
             // Buffer line for formatting.
@@ -154,6 +166,15 @@ int main (int argc, char* argv[])
         
         iteration_count++;
     }
+
+    // Get the time for when the simulation ends.
+    auto end = high_resolution_clock::now();
+
+    // Calculate the time taken in milliseconds.
+    duration <double, std::milli> time_elapsed = (end - start);
+
+    using namespace std;
+    std::cout << "Time taken: " << time_elapsed.count() << " ms";
 
     // Deallocating and terminating.
     free(arr);
