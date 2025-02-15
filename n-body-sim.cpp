@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
     int iterations = std::atoi(argv[3]);
     int dump_rate = std::atoi(argv[4]);
 
-    struct particle* arr = malloc(num_particles * sizeof(particle));
+    struct particle* arr = (particle*) malloc(num_particles * sizeof(particle));
 
     // Ensure malloc succeeds.
     if (arr == NULL) {
