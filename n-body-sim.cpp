@@ -23,71 +23,83 @@ double soft_factor = 0.000000000001;
 struct particle 
 {
     double mass;
-    double position;
-    double velocity;
-    double force;
+    double position[];
+    double velocity[];
+    double force[];
 };
 
-double calc_force(particle p1, particle p2) 
+void calc_force(particle p1, particle p2) 
 {
-    double loc_diff = std::abs(p1.position - p2.position);
-    double force = (grav * p1.mass * p2.mass) / pow(loc_diff, 2);
-    return force;
+    for (int i=0; i < 3; i++) {
+        double loc_diff = std::abs(p1.position[i] - p2.position[i]);
+        double force = (grav * p1.mass * p2.mass) / pow(loc_diff, 2) + soft_factor;
+        p1.force[i] = p1.force[i] + force;
+    }
 }
 
 // Calculating the direction of the force.
-double force_direction(particle p1, particle p2, double force)  
+void force_direction(particle p1, particle p2)  
 {
-    double location_diff = std::abs(p1.position - p2.position) + soft_factor;
-    double direction = ( (p1.position - p2.position) / location_diff) * (force);
-    return direction;
+    for (int i = 0; i < 3; i++) {
+        double loc_diff = std::abs(p1.position[i] - p2.position[i]) / soft_factor;
+        double direction = (p1.position[i] - p2.position[i]) / loc_diff * p1.force[i];
+    }
 }
 
 // AVP = acceleration, velocity, positions.
-double* calc_new_AVP(particle p, double time_step_size) 
+void calc_new_AVP(particle p, double time_step_size) 
 {
-    double* output_array = (double*) malloc(2 * sizeof(double) );
-    double accel = p.force / p.mass;
-    // New velocity value.
-    output_array[0] = p.velocity + (accel * time_step_size);
-    // New position value.
-    output_array[1] = p.position + (p.velocity * time_step_size);
-    return output_array;
+    for (int i=0; i < 3; i++) {
+        double accel = p.force[i] / p.mass;
+        
+        double velo_add = p.velocity[i] + (accel * time_step_size);
+        p.force[i] =  p.force[i] + velo_add;
+
+        double pos_add = p.position[i] + (p.velocity[i] * time_step_size);
+        p.position[i] = p.position[i] + pos_add;
+    }
+}
+
+// Generating x, y, and z data for velocity, position, and force.
+particle generate_data ()
+{
+    struct particle data;
+    srand(time(0));
+
+    // Mass of the particle --> CANNOT BE NEGATIVE AND ONLY ONE VALUE NEEDED.
+    data.mass = (double) (rand() % 100) / 100;
+
+    for (int i=0; i < 3; i++) {
+        // First gets x values, then y, and then finally z.
+        data.position[i] = (double) (rand() % 100) / 100;
+        data.velocity[i] = (double) (rand() % 100) / 100;
+        data.force[i] = (double) (rand() % 100) / 100;
+
+        // Random chance to generate negative values.
+        int neg = rand() % 2;
+        if (neg == 1) {
+            data.position[i] = -data.position[i];
+            data.velocity[i] = -data.velocity[i];
+            data.force[i] = -data.force[i];
+        }
+    }
+    
+    return data;
 }
 
 // Predefined scenario for testing purposes.
 void test_case(particle arr[]) 
 {
-    struct particle p1 {10.0, 5.5, 2.0, 0.0};
-    struct particle p2 = {4.75, -2.5, -1.25, 0.0};
-    struct particle p3 = {4.75, 1.75, -3.0, 0.0};
+    // Initializing the three particles;
+    // Using generate_data to get initial values for position, velocity, force.
+    struct particle p1 = generate_data();
+    struct particle p2 = generate_data();
+    struct particle p3 = generate_data();
 
     // Build the array.
     arr[0] = p1;
     arr[1] = p2;
     arr[2] = p3;
-}
-
-particle* generate_data (particle arr[], int num_particles) 
-{
-    // Ensure random number generation.
-    srand(time(0));
-    
-    for(int i=0; i < num_particles; i++) {
-        arr[i].mass = (double) (rand() % 100) / 100;
-        arr[i].position = (double) (rand() % 100) / 100;
-        arr[i].velocity = (double) (rand() % 100) / 100;
-
-        // Random chance to produce a negative number.
-        int neg = rand();
-        if (neg % 2 == 1){
-            arr[i].position = -arr[i].position;
-            arr[i].velocity = -arr[i].velocity;
-        }
-
-    }
-
-    return arr;
 }
 
 int main (int argc, char* argv[]) 
@@ -98,7 +110,7 @@ int main (int argc, char* argv[])
     int iterations = std::atoi(argv[3]);
     int dump_rate = std::atoi(argv[4]);
 
-    struct particle* arr = (particle*) malloc(num_particles * sizeof(particle));
+    struct particle* arr = malloc(num_particles * sizeof(particle));
 
     // Ensure malloc succeeds.
     if (arr == NULL) {
@@ -107,7 +119,9 @@ int main (int argc, char* argv[])
     }
 
     // Populate array.
-    arr = generate_data(arr, num_particles);
+    for (int i=0; i < num_particles; i++) {
+        arr[i] = generate_data();
+    }
 
     // Run the program for x number of iterations.
     int iteration_count = 0;
@@ -122,42 +136,40 @@ int main (int argc, char* argv[])
     auto start = high_resolution_clock::now();
     while(iteration_count <= iterations) 
     {
-        // Reset all the particle's forces.
-        for (int f=0; f < num_particles; f++) {
-            arr[f].force = 0;
+        // Resetting all forces to 0 for each dimension.
+        for(int p=0; p < num_particles; p++) {
+            for (int a=0; a < 3; a++) {
+                arr[p].force[a] = 0;
+            }
         }
 
         // Calculate forces between each combination of particles.
         for (int i=0; i < num_particles; i++) {
 
             for (int j=0; j < num_particles; j++) {
+                
                 // Prevent interactions to itself.
                 if (i != j) {
-                    double temp_force = calc_force(arr[i], arr[j]);
-                    arr[i].force += force_direction(arr[i], arr[j], temp_force);
+                    calc_force(arr[i], arr[j]);
+                    force_direction(arr[i], arr[j]);
+                    calc_new_AVP(arr[i], time_step_size);
                 }
+            
             }
-
-            // After all forces added up, update acceleration, velocity, position.
-            double* new_values =(double*) malloc(2 * sizeof(double) );
-
-            if(new_values == NULL) {
-                std::cout << "Malloc failed for new_values!";
-                return -1;
-            }
-
-            new_values = calc_new_AVP(arr[i], time_step_size);
-            arr[i].velocity += new_values[0];
-            arr[i].position += new_values[1];
-            free(new_values);
+        
         }
         
         // For every [dump_rate] interval, print the output to the log file.
         if (iteration_count % dump_rate == 0) {
             // Display the number of particles in the system.
             std::cout << num_particles << "\t";
+            
+            // Particle attributes.
             for (int a=0; a < num_particles; a++) {
-                std::cout << arr[a].mass << "\t" << arr[a].position << "\t" << arr[a].velocity << "\t" << arr[a].force << "\t";
+                std::cout << arr[a].mass 
+                << "\t" << arr[a].position[0] << "\t" << arr[a].position[1] << "\t" << arr[a].position[2]
+                << "\t" << arr[a].velocity[0] << "\t" << arr[a].velocity[1] << "\t" << arr[a].velocity[2] 
+                << "\t" << arr[a].force[0] << "\t" << arr[a].force[1] << "\t" << arr[a].force[2] << "\t";
             }
             
             // Buffer line for formatting.
