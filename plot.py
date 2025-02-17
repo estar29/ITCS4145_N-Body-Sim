@@ -62,7 +62,7 @@ def plot_nbody_trajectories(time_steps, output_pdf):
     with PdfPages(output_pdf) as pdf:
         for t, particles in enumerate(time_steps):
             plt.figure(figsize=(8, 8))
-            plt.title(f"Time Step {t + 1}")
+            plt.title(f"Time Step {t+1}")
             plt.xlabel("x-coordinate")
             plt.ylabel("y-coordinate")
 

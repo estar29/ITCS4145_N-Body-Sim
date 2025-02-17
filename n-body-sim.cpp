@@ -7,6 +7,10 @@
 // https://www.geeksforgeeks.org/cpp-malloc/?ref=header_outind
 // https://www.geeksforgeeks.org/power-function-c-cpp/
 
+// CHATGPT conversation about debugging a malloc issue:
+// https://chatgpt.com/share/67b2cb1a-ffe0-8001-89fd-370cab75d53b
+
+
 #include <cstdlib>
 #include <iostream>
 #include <math.h>
@@ -23,16 +27,17 @@ double soft_factor = 0.000000000001;
 struct particle 
 {
     double mass;
-    double position[];
-    double velocity[];
-    double force[];
+    double position[3];
+    double velocity[3];
+    double force[3];
 };
 
 void calc_force(particle p1, particle p2) 
 {
     for (int i=0; i < 3; i++) {
-        double loc_diff = std::abs(p1.position[i] - p2.position[i]);
-        double force = (grav * p1.mass * p2.mass) / pow(loc_diff, 2) + soft_factor;
+        double loc_diff = std::abs(p1.position[i] - p2.position[i]) + soft_factor;
+        double force = (grav * p1.mass * p2.mass) / pow(loc_diff, 2);
+        //p1.force[i] = force;
         p1.force[i] = p1.force[i] + force;
     }
 }
@@ -41,8 +46,9 @@ void calc_force(particle p1, particle p2)
 void force_direction(particle p1, particle p2)  
 {
     for (int i = 0; i < 3; i++) {
-        double loc_diff = std::abs(p1.position[i] - p2.position[i]) / soft_factor;
+        double loc_diff = std::abs(p1.position[i] - p2.position[i]) + soft_factor;
         double direction = (p1.position[i] - p2.position[i]) / loc_diff * p1.force[i];
+        p1.force[i] = p1.force[i] + direction;
     }
 }
 
