@@ -6,6 +6,7 @@
 // https://www.geeksforgeeks.org/structures-in-cpp/?ref=header_outind
 // https://www.geeksforgeeks.org/cpp-malloc/?ref=header_outind
 // https://www.geeksforgeeks.org/power-function-c-cpp/
+// https://www.youtube.com/watch?v=MMp4zV05R5k
 
 // CHATGPT conversation about debugging a malloc issue:
 // https://chatgpt.com/share/67b2cb1a-ffe0-8001-89fd-370cab75d53b
@@ -16,6 +17,7 @@
 #include <math.h>
 #include <random>
 #include <chrono>
+#include <fstream>
 
 using namespace std;
 
@@ -167,12 +169,17 @@ int main (int argc, char* argv[])
         
         // For every [dump_rate] interval, print the output to the log file.
         if (iteration_count % dump_rate == 0) {
-            // Display the number of particles in the system.
-            std::cout << num_particles << "\t";
+                        
+            // Passing in solar.tsv
+            ofstream output;
+            output.open("solar.tsv");
             
-            // Particle attributes.
+            // Display the number of particles in the system.
+            output << num_particles << "\t";
+            
+            // Printing particle attributes to the solar.tsv file.
             for (int a=0; a < num_particles; a++) {
-                std::cout << arr[a].mass 
+                output << arr[a].mass 
                 << "\t" << arr[a].position[0] << "\t" << arr[a].position[1] << "\t" << arr[a].position[2]
                 << "\t" << arr[a].velocity[0] << "\t" << arr[a].velocity[1] << "\t" << arr[a].velocity[2] 
                 << "\t" << arr[a].force[0] << "\t" << arr[a].force[1] << "\t" << arr[a].force[2] << "\t";
