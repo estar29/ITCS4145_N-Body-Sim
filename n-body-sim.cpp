@@ -24,6 +24,10 @@ using namespace std;
 // Global variables.
 double grav = 0.00000000006674;
 double soft_factor = 0.000000000001;
+                        
+// Passing in solar.tsv
+ofstream output;
+            
 
 // Initialize particle parameters.
 struct particle 
@@ -169,11 +173,9 @@ int main (int argc, char* argv[])
         
         // For every [dump_rate] interval, print the output to the log file.
         if (iteration_count % dump_rate == 0) {
-                        
-            // Passing in solar.tsv
-            ofstream output;
-            output.open("solar.tsv");
-            
+            // Open the output file.
+            output.open("solar.tsv", fstream::app);
+
             // Display the number of particles in the system.
             output << num_particles << "\t";
             
